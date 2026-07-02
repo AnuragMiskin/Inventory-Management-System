@@ -1,0 +1,54 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ---- Environment / secrets ----
+.env
+.env.*
+*.env
+
+# ---- Logs ----
+*.log
+
+# ---- Databases ----
+*.db
+*.sqlite3
+*.sqlite
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# ---- OS / Editor ----
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+
+# ---- FastAPI / Uvicorn ----
+*.pid
+
+# ---- Build / dist ----
+build/
+dist/
+*.egg-info/
+
+# ---- Type checking ----
+.mypy_cache/
+.pytest_cache/
+
+# ---- Coverage reports ----
+htmlcov/
+.coverage
+.coverage.*
+.coverage.xml
+
+# ---- Scratch / temp ----
+*.tmp
