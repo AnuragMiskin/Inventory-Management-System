@@ -11,6 +11,14 @@ from schemas import ProductCreate, ProductOut, ProductQuantityUpdate, StockUpdat
 app = FastAPI()
 
 
+@app.get("/")
+def index() -> dict:
+    return {
+        "message": "Welcome to Inventory Management System",
+        "detail": "For detailed information on available APIs, access /docs.",
+    }
+
+
 def print_greeting() -> None:
     print("inventory-management-system")
 
