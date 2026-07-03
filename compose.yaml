@@ -1,7 +1,9 @@
 services:
   web:
-    build: .
-    container_name: ims
+    build:
+      context: .
+    image: imanurag3912/inventory_management:1.0
+    container_name: inventory_management
     ports:
       - 8000:8000
     env_file:
@@ -10,7 +12,7 @@ services:
       - db
 
   db:
-    image: postgres
+    image: postgres:17
     restart: always
     # set shared memory limit when using docker compose
     shm_size: 128mb
@@ -26,7 +28,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       
   adminer:
-    image: adminer
+    image: adminer:5
     restart: always
     ports:
       - 8080:8080
