@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 import main as app_module
 import models as models_module
 from database import get_db
