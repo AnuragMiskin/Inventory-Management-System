@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -8,7 +9,17 @@ import models
 from database import engine, get_db
 from schemas import ProductCreate, ProductOut, ProductQuantityUpdate, StockUpdate
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: ensure tables exist. Shutdown: cleanup if needed."""
+    ensure_tables()
+    print("DB tables ensured at startup.")
+    yield
+    # Shutdown logic here if needed
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -37,11 +48,10 @@ def ensure_tables() -> None:
     models.Base.metadata.create_all(bind=engine)
 
 
-def get_db_with_checks(db: Session = Depends(get_db)) -> Session:
-    """Dependency that checks DB connection and ensures tables exist."""
+def get_db_checked(db: Session = Depends(get_db)) -> Session:
+    """Dependency that checks DB connection is alive."""
     if not db_is_up():
         raise HTTPException(status_code=500, detail="Database connection failed")
-    ensure_tables()
     return db
 
 
@@ -62,13 +72,13 @@ def update_and_return_product(product: models.Product, db: Session) -> ProductOu
 
 
 @app.post("/products", response_model=ProductOut)
-def create_product(payload: ProductCreate, db: Session = Depends(get_db_with_checks)):
+def create_product(payload: ProductCreate, db: Session = Depends(get_db_checked)):
     product = models.Product(name=payload.name, quantity=payload.quantity)
     return update_and_return_product(product, db)
 
 
 @app.get("/products", response_model=List[ProductOut])
-def get_products(db: Session = Depends(get_db_with_checks)):
+def get_products(db: Session = Depends(get_db_checked)):
     stmt = select(models.Product).order_by(models.Product.id)
     rows = db.execute(stmt).scalars().all()
     return [ProductOut(id=p.id, name=p.name, quantity=p.quantity) for p in rows]
@@ -78,7 +88,7 @@ def get_products(db: Session = Depends(get_db_with_checks)):
 def update_product(
     product_id: int,
     payload: ProductQuantityUpdate,
-    db: Session = Depends(get_db_with_checks),
+    db: Session = Depends(get_db_checked),
 ):
     product = get_product_or_404(product_id, db)
     product.quantity = payload.quantity
@@ -86,7 +96,7 @@ def update_product(
 
 
 @app.delete("/products/{product_id}", status_code=204)
-def delete_product(product_id: int, db: Session = Depends(get_db_with_checks)):
+def delete_product(product_id: int, db: Session = Depends(get_db_checked)):
     product = get_product_or_404(product_id, db)
     db.delete(product)
     db.commit()
@@ -94,14 +104,14 @@ def delete_product(product_id: int, db: Session = Depends(get_db_with_checks)):
 
 
 @app.post("/inventory/add", response_model=ProductOut)
-def receive_stock(payload: StockUpdate, db: Session = Depends(get_db_with_checks)):
+def receive_stock(payload: StockUpdate, db: Session = Depends(get_db_checked)):
     product = get_product_or_404(payload.productId, db)
     product.quantity += payload.quantity
     return update_and_return_product(product, db)
 
 
 @app.post("/inventory/remove", response_model=ProductOut)
-def sell_stock(payload: StockUpdate, db: Session = Depends(get_db_with_checks)):
+def sell_stock(payload: StockUpdate, db: Session = Depends(get_db_checked)):
     product = get_product_or_404(payload.productId, db)
     if product.quantity < payload.quantity:
         raise HTTPException(status_code=400, detail="insufficient stock")
@@ -116,8 +126,7 @@ def main() -> None:
         print("DB connection failed (create the DB / fix credentials).")
         return
 
-    ensure_tables()
-    print("DB tables ensured.")
+    print("DB connection successful. Run with: uvicorn main:app --reload")
 
 
 if __name__ == "__main__":
