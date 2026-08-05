@@ -26,9 +26,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  volumes:
+    postgres_data:
       
-  adminer:
-    image: adminer:5
-    restart: always
-    ports:
-      - 8080:8080
